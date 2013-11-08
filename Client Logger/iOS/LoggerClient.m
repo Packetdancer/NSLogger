@@ -698,6 +698,7 @@ static void LoggerLogToConsole(CFDataRef data)
 	int imgWidth=0, imgHeight=0;
 	CFStringRef message = NULL;
 	CFStringRef thread = NULL;
+    CFStringRef function = NULL;
 
 	// decode message contents
 	uint8_t *p = (uint8_t *)CFDataGetBytePtr(data) + 4;
@@ -788,6 +789,11 @@ static void LoggerLogToConsole(CFDataRef data)
 						thread = CFRetain(part);
 				}
 				break;
+            case PART_KEY_FUNCTIONNAME:
+                if (partType == PART_TYPE_STRING) {
+                    function = CFRetain(part);
+                }
+                break;
 			case PART_KEY_MESSAGE:
 				if (part != NULL)
 				{
@@ -838,9 +844,11 @@ static void LoggerLogToConsole(CFDataRef data)
 		memset(buf, ' ', (size_t)n);
 		buf[n] = 0;
 	}
-	CFStringAppendFormat(s, NULL, CFSTR(".%04d %s%@ | %@"),
+	CFStringAppendFormat(s, NULL, CFSTR(".%04d %s%@ | %@%@%@"),
 						 (int)(timestamp.tv_usec / 1000),
 						 buf, (thread == NULL) ? CFSTR("") : thread,
+                         (function != NULL) ? function : CFSTR(""),
+                         (function != NULL) ? CFSTR(" | ") : CFSTR(""),
 						 (message != NULL) ? message : CFSTR(""));
 
 	if (thread != NULL)
